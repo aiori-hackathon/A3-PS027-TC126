@@ -1,0 +1,9 @@
+services:
+  sixcheck:
+    build: .
+    # Host networking lets the container use the server's own IPv6 connectivity (Linux only)
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      # - TRUST_PROXY=1   # uncomment when running behind Caddy or nginx

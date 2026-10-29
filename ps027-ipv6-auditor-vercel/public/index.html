@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SixCheck – IPv6 Website and Dependency Readiness Auditor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav><b><span class="mk" aria-hidden="true">6</span>SixCheck</b><div><a href="#audit">Audit</a><a href="#method">Method</a><a href="#standards">Standards</a><a href="#design">Design</a><a href="#plan">Timeline</a></div></nav>
+
+<header id="audit"><div class="hero">
+<h1>IPv6 readiness audit for websites and their dependencies</h1>
+<p class="lead">Assess a domain’s IPv6 deployment across DNS, web servers, TLS certificates and third-party services, with a prioritised remediation list.</p>
+<div class="bar">
+<input id="dom" type="text" value="example.org" placeholder="example.org" aria-label="Domain to audit" autocomplete="off" spellcheck="false">
+<button id="go" type="button">Run audit</button>
+</div>
+<div class="chips">Sample domains: <button class="ghost mono" data-d="wikipedia.org">wikipedia.org</button><button class="ghost mono" data-d="cloudflare.com">cloudflare.com</button><button class="ghost mono" data-d="nic.in">nic.in</button></div>
+<p class="banner" id="mode">Enter a domain and press Run audit. With the backend deployed, results are live DNS, TLS and dependency checks. If the backend is not reachable, the page shows simulated demo results.</p>
+<dl class="facts"><div><dt>8</dt><dd>Weighted readiness checks</dd></div><div><dt>6</dt><dd>Stage audit pipeline</dd></div><div><dt>6</dt><dd>RFCs referenced</dd></div><div><dt>0–100</dt><dd>Readiness score</dd></div></dl>
+
+</div><div id="result" aria-live="polite">
+<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px"><p class="mono" id="target" style="margin:0;color:var(--muted);line-height:1.7"></p><button class="ghost noprint" id="pr" type="button">Print report</button></div>
+<div class="addr" id="addr"></div>
+<p class="note" style="margin-top:2px">Each group of the address is one check. Green passed, amber needs attention, red blocks IPv6 users.</p>
+<div class="verdict"><div class="ring" id="ring"><div class="score" id="score"></div></div><h2 id="verdict"></h2></div>
+<div class="card" id="checks"></div>
+<h3 style="margin-top:28px">Third-party dependencies</h3>
+<p class="note" style="margin:0 0 4px">Hosts the page loads content from. One IPv4-only dependency can stall page loads for IPv6-only visitors.</p>
+<div class="card"><div class="tw"><table id="deps"></table></div></div>
+<h3 style="margin-top:28px">What to fix first</h3>
+<div class="card" id="fixes"></div>
+</div>
+</header>
+
+<section id="method">
+<h2>How an audit runs</h2>
+<p class="lead">Six stages turn a domain name into a scored report.</p>
+<ol class="steps">
+<li><h3>Resolve</h3><p>Query A and AAAA for the apex and www, plus NS and MX records.</p></li>
+<li><h3>Crawl</h3><p>Fetch the home page and collect every host it loads scripts, styles, fonts and images from.</p></li>
+<li><h3>Probe</h3><p>Open TCP 443 over IPv6 only, with a Happy Eyeballs fallback test against IPv4.</p></li>
+<li><h3>Validate</h3><p>Check the TLS certificate and HTTP response served on the IPv6 path match IPv4.</p></li>
+<li><h3>Simulate</h3><p>Repeat the fetch through DNS64 and NAT64 to model an IPv6-only network.</p></li>
+<li><h3>Score</h3><p>Weight the eight checks, rank failures by impact and write the fix list.</p></li>
+</ol>
+</section>
+
+<section id="standards">
+<h2>Standards behind the checks</h2>
+<div class="card"><div class="tw"><table>
+<tr><th>Reference</th><th>Used for</th></tr>
+<tr><td class="mono">RFC 8200</td><td>IPv6 specification, the baseline for reachability tests</td></tr>
+<tr><td class="mono">RFC 3596</td><td>AAAA records for IPv6 addresses in DNS</td></tr>
+<tr><td class="mono">RFC 3901 / RFC 9386</td><td>Authoritative DNS reachable over IPv6; IPv6 deployment guidance</td></tr>
+<tr><td class="mono">RFC 8305</td><td>Happy Eyeballs v2, the IPv6-first connection fallback</td></tr>
+<tr><td class="mono">RFC 6146 / RFC 6147</td><td>NAT64 and DNS64 for the IPv6-only simulation</td></tr>
+<tr><td class="mono">RFC 6724</td><td>Default address selection when both families exist</td></tr>
+</table></div></div>
+</section>
+
+<section id="design">
+<h2>System design</h2>
+<p class="lead">A web front end over a measurement service, so results come from live probes and can be reproduced.</p>
+<div class="arch">
+<div><b>Web UI</b>This site. Submits a domain, renders the report.</div>
+<div><b>API gateway</b>Validates input, rate limits, queues jobs.</div>
+<div><b>Probe workers</b>DNS resolver, headless crawler and IPv6-only network namespace.</div>
+<div><b>Scoring engine</b>Weights checks, ranks fixes, stores history.</div>
+<div><b>Report store</b>JSON results for trends and bulk comparison.</div>
+</div>
+<p class="note">Data flow: the UI sends a domain to the API, which queues a job. Workers run the probes, the scoring engine builds the report, and the UI polls for the finished result. Optimisations: cached DNS answers, parallel probes per dependency and a shared crawl for repeat hosts.</p>
+</section>
+
+<section id="plan">
+<h2>Deployment timeline</h2>
+<div class="tl">
+<p><b>Phase 1.</b> DNS and HTTPS reachability checks for a single domain.</p>
+<p><b>Phase 2.</b> Dependency crawler and per-host IPv6 status.</p>
+<p><b>Phase 3.</b> IPv6-only simulation with DNS64 and NAT64, plus scoring.</p>
+<p><b>Phase 4.</b> Bulk audits, history and a public readiness dashboard.</p>
+</div>
+</section>
+
+<footer><b>SixCheck</b> – IPv6 Website and Dependency Readiness Auditor<br>AIORI Hackathon 3, problem statement PS-027 (Internet Measurement). Team ID <span class="mono">A3-PS027-TC126</span>.<br>Demo results are simulated and do not describe any real domain.</footer>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
