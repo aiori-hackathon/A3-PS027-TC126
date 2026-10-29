@@ -6,4 +6,3 @@ This repository will contain the code and resources for the AIORI-3 hackathon th
 [Watch our Team Introduction Video on YouTube](https://youtu.be/D7L42JrYv28?si=yNpgS5vclpBvLdW4)
 
 
-https://sixcheck-ipv6-website-and-dependenc.vercel.app
